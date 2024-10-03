@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级文本对比工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            resize: vertical;
+        }
+        button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .diff-add {
+            background-color: #e6ffed;
+            border: 1px solid #b4e2b4;
+        }
+        .diff-remove {
+            background-color: #ffeef0;
+            border: 1px solid #fdb8c0;
+        }
+        .back-link {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .back-link:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">返回工具集合</a>
+        <h1>高级文本对比工具</h1>
+        <textarea id="text1" placeholder="输入第一段文本"></textarea>
+        <textarea id="text2" placeholder="输入第二段文本"></textarea>
+        <button onclick="compareTexts()">比较文本</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function compareTexts() {
+            const text1 = document.getElementById('text1').value;
+            const text2 = document.getElementById('text2').value;
+            const dmp = new diff_match_patch();
+            const diffs = dmp.diff_main(text1, text2);
+            dmp.diff_cleanupSemantic(diffs);
+
+            let html = '';
+            for (let i = 0; i < diffs.length; i++) {
+                const [type, text] = diffs[i];
+                switch (type) {
+                    case 1: // Insertion
+                        html += `<span class="diff-add">${text}</span>`;
+                        break;
+                    case -1: // Deletion
+                        html += `<span class="diff-remove">${text}</span>`;
+                        break;
+                    case 0: // No change
+                        html += text;
+                        break;
+                }
+            }
+
+            document.getElementById('result').innerHTML = html;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线工具集合</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            width: 100%;
+            max-width: 400px;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .category-list, .tool-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .category-item, .tool-item {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            text-align: center;
+        }
+        .category-item:hover, .tool-item:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+        .tool-item {
+            background-color: #28a745;
+        }
+        .tool-item:hover {
+            background-color: #218838;
+        }
+        .back-button {
+            display: block;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 20px auto 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .back-button:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const categories = [
+            { 
+                id: 1, 
+                name: "文本处理", 
+                tools: [
+                    { id: "text-converter", name: "文本转换", link: "/tools/text-converter" },
+                    { id: "text-diff", name: "文本对比", link: "/text-tools/text-diff.html" },
+                    { id: "text-encrypt", name: "加密解密", link: "/tools/text-encrypt" }
+                ]
+            },
+            { 
+                id: 2, 
+                name: "图像处理", 
+                tools: [
+                    { id: "image-compress", name: "图片压缩", link: "/tools/image-compress" },
+                    { id: "image-convert", name: "图片格式转换", link: "/tools/image-convert" },
+                    { id: "image-crop", name: "图片裁剪", link: "/tools/image-crop" }
+                ]
+            },
+            { 
+                id: 3, 
+                name: "开发工具", 
+                tools: [
+                    {id: "Code-test-online", name: "多种语言代码在线执行", link: "https://www.onlinegdb.com/"},
+                    { id: "SQL-online-test", name: "SQL在线执行测试", link: "https://sqliteonline.com/" },
+                    { id: "markdown-online", name: "Markdown在线", link: "/develop-tools/markdown-online.html" },
+                    { id: "json-formatter", name: "JSON格式化", link: "/tools/json-formatter" },
+                    { id: "regex-tester", name: "正则表达式测试", link: "/develop-tools/regex.html" },
+                    { id: "code-beautifier", name: "代码美化", link: "/tools/code-beautifier" }
+                ]
+            },
+            { 
+                id: 4, 
+                name: "数学工具", 
+                tools: [
+                    { id: "funcion-graph", name: "函数图形", link: "https://www.desmos.com/calculator?lang=zh-CN" },
+                    { id: "system-converter", name: "进制转换", link: "/math-tools/system-converter.html" },
+                    { id: "unit-converter", name: "单位换算", link: "/math-tools/unit-converter.html" },
+                    { id: "scientific-calculator", name: "科学计算器", link: "/math-tools/sci-calculator.html" },
+                    { id: "statistics-analyzer", name: "统计分析", link: "/tools/statistics-analyzer" }
+                ]
+            }
+        ];
+
+        function App() {
+            const [currentView, setCurrentView] = React.useState('categories');
+            const [selectedCategory, setSelectedCategory] = React.useState(null);
+            const [searchTerm, setSearchTerm] = React.useState('');
+
+            const handleCategoryClick = (category) => {
+                setSelectedCategory(category);
+                setCurrentView('tools');
+            };
+
+            const handleBackClick = () => {
+                setCurrentView('categories');
+                setSelectedCategory(null);
+                setSearchTerm('');
+            };
+
+            const handleToolClick = (tools) => {
+                console.log(`Navigating to ${tools.link}`);
+                // 如果要在新标签页打开链接，可以使用:
+                // window.open(tool.link, '_blank');
+                window.location.href = tools.link;
+            };
+
+            const handleSearch = (event) => {
+                setSearchTerm(event.target.value);
+            };
+
+            const filteredCategories = categories.filter(category =>
+                category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                category.tools.some(tool => tool.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            );
+
+            const allTools = categories.flatMap(category => category.tools);
+            const filteredTools = allTools.filter(tool =>
+                tool.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            return (
+                <div className="container">
+                    <h1>在线工具集合</h1>
+                    <div className="search-container">
+                        <input
+                            type="text"
+                            placeholder="搜索工具..."
+                            value={searchTerm}
+                            onChange={handleSearch}
+                            className="search-input"
+                        />
+                    </div>
+                    {currentView === 'categories' ? (
+                        <div>
+                            {searchTerm ? (
+                                <div className="tool-list">
+                                    {filteredTools.map((tool) => (
+                                        <div key={tool.id} className="tool-item" onClick={() => handleToolClick(tool)}>
+                                            {tool.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="category-list">
+                                    {filteredCategories.map(category => (
+                                        <div key={category.id} className="category-item" onClick={() => handleCategoryClick(category)}>
+                                            {category.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div>
+                            <h2>{selectedCategory.name}</h2>
+                            <div className="tool-list">
+                                {selectedCategory.tools
+                                    .filter(tool => tool.name.toLowerCase().includes(searchTerm.toLowerCase()))
+                                    .map((tool) => (
+                                        <div key={tool.id} className="tool-item" onClick={() => handleToolClick(tool)}>
+                                            {tool.name}
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                            <button className="back-button" onClick={handleBackClick}>返回</button>
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>

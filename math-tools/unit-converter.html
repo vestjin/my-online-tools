@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>单位换算工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .back-link {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            color: #666;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">返回工具集合</a>
+        <h1>单位换算工具</h1>
+        <label for="category">选择类别:</label>
+        <select id="category" onchange="updateUnits()">
+            <option value="length">长度</option>
+            <option value="area">面积</option>
+            <option value="volume">体积</option>
+            <option value="weight">重量</option>
+            <option value="temperature">温度</option>
+            <option value="time">时间</option>
+            <option value="speed">速度</option>
+        </select>
+        
+        <label for="fromUnit">从单位:</label>
+        <select id="fromUnit"></select>
+        
+        <label for="toUnit">到单位:</label>
+        <select id="toUnit"></select>
+        
+        <label for="value">输入数值:</label>
+        <input type="number" id="value" placeholder="输入要转换的数值">
+        
+        <button onclick="convert()">转换</button>
+        
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const units = {
+            length: ['米', '厘米', '毫米', '千米', '英寸', '英尺', '码', '英里', '纳米', '微米', '光年'],
+            area: ['平方米', '平方厘米', '平方千米', '公顷', '英亩', '平方英尺', '平方英寸'],
+            volume: ['立方米', '立方厘米', '升', '毫升', '加仑(美)', '立方英尺', '立方英寸'],
+            weight: ['克', '千克', '毫克', '吨', '盎司', '磅', '斤', '公担'],
+            temperature: ['摄氏度', '华氏度', '开尔文'],
+            time: ['秒', '分钟', '小时', '天', '周', '月（30天）', '年（365天）', '毫秒', '微秒'],
+            speed: ['米/秒', '千米/小时', '英里/小时', '节', '马赫']
+        };
+
+        const conversions = {
+            length: {
+                base: '米',
+                ratios: {
+                    '米': 1, '厘米': 100, '毫米': 1000, '千米': 0.001, '英寸': 39.3701, '英尺': 3.28084, 
+                    '码': 1.09361, '英里': 0.000621371, '纳米': 1e9, '微米': 1e6, '光年': 1 / 9.461e15
+                }
+            },
+            area: {
+                base: '平方米',
+                ratios: {
+                    '平方米': 1, '平方厘米': 10000, '平方千米': 1e-6, '公顷': 1e-4, 
+                    '英亩': 0.000247105, '平方英尺': 10.7639, '平方英寸': 1550.0031
+                }
+            },
+            volume: {
+                base: '立方米',
+                ratios: {
+                    '立方米': 1, '立方厘米': 1e6, '升': 1000, '毫升': 1e6, 
+                    '加仑(美)': 264.172, '立方英尺': 35.3147, '立方英寸': 61023.7
+                }
+            },
+            weight: {
+                base: '克',
+                ratios: {
+                    '克': 1, '千克': 0.001, '毫克': 1000, '吨': 1e-6, '盎司': 0.035274,
+                    '磅': 0.00220462, '斤': 0.002, '公担': 1e-5
+                }
+            },
+            speed: {
+                base: '米/秒',
+                ratios: {
+                    '米/秒': 1, '千米/小时': 3.6, '英里/小时': 2.23694, '节': 1.94384, '马赫': 0.00293858
+                }
+            }
+        };
+
+        function updateUnits() {
+            const category = document.getElementById('category').value;
+            const fromUnit = document.getElementById('fromUnit');
+            const toUnit = document.getElementById('toUnit');
+            
+            fromUnit.innerHTML = '';
+            toUnit.innerHTML = '';
+            
+            units[category].forEach(unit => {
+                fromUnit.innerHTML += `<option value="${unit}">${unit}</option>`;
+                toUnit.innerHTML += `<option value="${unit}">${unit}</option>`;
+            });
+        }
+
+        function convert() {
+            const category = document.getElementById('category').value;
+            const fromUnit = document.getElementById('fromUnit').value;
+            const toUnit = document.getElementById('toUnit').value;
+            const value = parseFloat(document.getElementById('value').value);
+            const resultDiv = document.getElementById('result');
+
+            if (isNaN(value)) {
+                resultDiv.textContent = '请输入有效的数值';
+                return;
+            }
+
+            let result;
+            switch (category) {
+                case 'temperature':
+                    result = convertTemperature(value, fromUnit, toUnit);
+                    break;
+                case 'time':
+                    result = convertTime(value, fromUnit, toUnit);
+                    break;
+                default:
+                    result = convertStandard(category, value, fromUnit, toUnit);
+            }
+
+            resultDiv.textContent = `${value} ${fromUnit} = ${result.toFixed(6)} ${toUnit}`;
+        }
+
+        function convertStandard(category, value, from, to) {
+            const conv = conversions[category];
+            return value / conv.ratios[from] * conv.ratios[to];
+        }
+
+        function convertTemperature(value, from, to) {
+            if (from === to) return value;
+            let celsius;
+            if (from === '摄氏度') celsius = value;
+            else if (from === '华氏度') celsius = (value - 32) * 5/9;
+            else if (from === '开尔文') celsius = value - 273.15;
+
+            if (to === '摄氏度') return celsius;
+            if (to === '华氏度') return celsius * 9/5 + 32;
+            if (to === '开尔文') return celsius + 273.15;
+        }
+
+        function convertTime(value, from, to) {
+            const secondConversion = {
+                '秒': 1, '分钟': 60, '小时': 3600, '天': 86400, '周': 604800,
+                '月（30天）': 2592000, '年（365天）': 31536000, '毫秒': 0.001, '微秒': 0.000001
+            };
+            return value * secondConversion[from] / secondConversion[to];
+        }
+
+        // 初始化单位选项
+        updateUnits();
+    </script>
+</body>
+</html>

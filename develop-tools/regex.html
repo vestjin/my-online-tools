@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>正则表达式测试工具 - 在线工具集合</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .regex-input-container {
+            display: flex;
+            gap: 10px;
+        }
+
+        .regex-input {
+            flex: 1;
+        }
+
+        .flags-input {
+            width: 100px;
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+
+        .match-item {
+            background-color: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        .error {
+            color: #dc3545;
+            padding: 10px;
+            background-color: #ffe6e6;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .result-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .highlight {
+            background-color: #ffd700;
+            padding: 2px;
+            border-radius: 2px;
+        }
+
+        .back-link {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .back-link:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">返回工具集合</a>
+        
+        <h1>正则表达式测试工具</h1>
+        
+        <div class="input-group">
+            <div class="regex-input-container">
+                <div class="regex-input">
+                    <label for="regex">正则表达式:</label>
+                    <input type="text" id="regex" placeholder="输入正则表达式...">
+                </div>
+                <div class="flags-input">
+                    <label for="flags">标志:</label>
+                    <input type="text" id="flags" value="g" placeholder="g, i, m...">
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label for="testText">测试文本:</label>
+            <textarea id="testText" placeholder="输入要测试的文本..."></textarea>
+        </div>
+
+        <div class="input-group">
+            <label for="replacement">替换文本:</label>
+            <input type="text" id="replacement" placeholder="输入替换文本...">
+        </div>
+
+        <div id="error" class="error" style="display: none;"></div>
+
+        <div class="results">
+            <div class="result-title">匹配结果:</div>
+            <div id="matches"></div>
+        </div>
+
+        <div class="results">
+            <div class="result-title">替换结果:</div>
+            <div id="replacementResult"></div>
+        </div>
+    </div>
+
+    <script>
+        function testRegex() {
+            const regex = document.getElementById('regex').value;
+            const flags = document.getElementById('flags').value;
+            const testText = document.getElementById('testText').value;
+            const replacement = document.getElementById('replacement').value;
+            const errorDiv = document.getElementById('error');
+            const matchesDiv = document.getElementById('matches');
+            const replacementDiv = document.getElementById('replacementResult');
+
+            errorDiv.style.display = 'none';
+            matchesDiv.innerHTML = '';
+            replacementDiv.innerHTML = '';
+
+            if (!regex || !testText) return;
+
+            try {
+                const regexObj = new RegExp(regex, flags);
+                const matches = Array.from(testText.matchAll(regexObj));
+                
+                if (matches.length === 0) {
+                    matchesDiv.innerHTML = '<div class="match-item">没有找到匹配项</div>';
+                } else {
+                    matches.forEach((match, index) => {
+                        const matchDiv = document.createElement('div');
+                        matchDiv.className = 'match-item';
+                        
+                        let matchInfo = `<div>匹配 ${index + 1}: ${match[0]}</div>`;
+                        
+                        if (match.length > 1) {
+                            matchInfo += `<div>捕获组: ${match.slice(1).join(', ')}</div>`;
+                        }
+                        
+                        matchInfo += `<div>位置: ${match.index}</div>`;
+                        matchDiv.innerHTML = matchInfo;
+                        matchesDiv.appendChild(matchDiv);
+                    });
+                }
+
+                if (replacement) {
+                    const replacedText = testText.replace(regexObj, replacement);
+                    replacementDiv.innerHTML = `<div class="match-item">${replacedText}</div>`;
+                }
+
+            } catch (err) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = `错误: ${err.message}`;
+            }
+        }
+
+        ['regex', 'flags', 'testText', 'replacement'].forEach(id => {
+            document.getElementById(id).addEventListener('input', testRegex);
+        });
+    </script>
+</body>
+</html>

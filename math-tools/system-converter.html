@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线进制转换工具</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .back-link {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            font-size: 14px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            color: #666;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+        button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9e9e9;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../index.html" class="back-link">返回工具集合</a>
+        <h1>在线进制转换工具</h1>
+        <label for="input">输入数值:</label>
+        <input type="text" id="input" placeholder="输入要转换的数值">
+        
+        <label for="fromBase">从进制:</label>
+        <select id="fromBase">
+            <option value="2">二进制</option>
+            <option value="8">八进制</option>
+            <option value="10" selected>十进制</option>
+            <option value="16">十六进制</option>
+        </select>
+        
+        <label for="toBase">转换到进制:</label>
+        <select id="toBase">
+            <option value="2">二进制</option>
+            <option value="8">八进制</option>
+            <option value="10">十进制</option>
+            <option value="16" selected>十六进制</option>
+        </select>
+        
+        <button onclick="convert()">转换</button>
+        
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        function convert() {
+            const input = document.getElementById('input').value;
+            const fromBase = parseInt(document.getElementById('fromBase').value);
+            const toBase = parseInt(document.getElementById('toBase').value);
+            const resultDiv = document.getElementById('result');
+
+            if (input.trim() === '') {
+                resultDiv.textContent = '请输入要转换的数值';
+                return;
+            }
+
+            try {
+                // 首先将输入转换为十进制
+                const decimal = parseInt(input, fromBase);
+                
+                if (isNaN(decimal)) {
+                    throw new Error('无效的输入');
+                }
+
+                // 然后将十进制转换为目标进制
+                let result = decimal.toString(toBase);
+
+                // 对于二进制和十六进制，添加前缀
+                if (toBase === 2) {
+                    result = '0b' + result;
+                } else if (toBase === 16) {
+                    result = '0x' + result;
+                }
+
+                resultDiv.textContent = `转换结果: ${result}`;
+            } catch (error) {
+                resultDiv.textContent = `错误: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
