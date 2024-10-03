@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>亲戚称谓转换工具</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #007BFF;
+        }
+        select, input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>亲戚称谓转换工具</h1>
+        <select id="relation">
+            <option value="father">父亲</option>
+            <option value="mother">母亲</option>
+            <option value="brother">兄弟</option>
+            <option value="sister">姐妹</option>
+            <option value="son">儿子</option>
+            <option value="daughter">女儿</option>
+            <option value="uncle">叔叔/舅舅</option>
+            <option value="aunt">阿姨/姑姑</option>
+            <option value="grandfather">爷爷/外公</option>
+            <option value="grandmother">奶奶/外婆</option>
+        </select>
+        <input type="text" id="yourRole" placeholder="你的身份（如：我）">
+        <button onclick="convertRelation()">转换称谓</button>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        function convertRelation() {
+            const relation = document.getElementById("relation").value;
+            const yourRole = document.getElementById("yourRole").value || '我';
+
+            let resultText = '';
+
+            switch(relation) {
+                case 'father':
+                    resultText = `${yourRole}的父亲叫爸爸或老爸`;
+                    break;
+                case 'mother':
+                    resultText = `${yourRole}的母亲叫妈妈或老妈`;
+                    break;
+                case 'brother':
+                    resultText = `${yourRole}的兄弟可以称为哥哥或弟弟`;
+                    break;
+                case 'sister':
+                    resultText = `${yourRole}的姐妹可以称为姐姐或妹妹`;
+                    break;
+                case 'son':
+                    resultText = `${yourRole}的儿子就是儿子`;
+                    break;
+                case 'daughter':
+                    resultText = `${yourRole}的女儿就是女儿`;
+                    break;
+                case 'uncle':
+                    resultText = `${yourRole}的叔叔/舅舅可以叫叔叔或舅舅`;
+                    break;
+                case 'aunt':
+                    resultText = `${yourRole}的阿姨/姑姑可以叫阿姨或姑姑`;
+                    break;
+                case 'grandfather':
+                    resultText = `${yourRole}的爷爷/外公可以叫爷爷或外公`;
+                    break;
+                case 'grandmother':
+                    resultText = `${yourRole}的奶奶/外婆可以叫奶奶或外婆`;
+                    break;
+                default:
+                    resultText = '请选择一个有效的称谓';
+            }
+
+            document.getElementById("result").textContent = resultText;
+        }
+    </script>
+</body>
+</html>
