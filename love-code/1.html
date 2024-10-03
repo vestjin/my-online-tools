@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>浪漫页面</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Playfair Display', serif;
+            color: white;
+            overflow: hidden;
+            position: relative;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: #000; /* 预备背景 */
+        }
+
+        .container {
+            position: relative;
+            margin-top: 20px; /* 增加容器顶部间距 */
+        }
+        .bg-video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: -1;
+        }
+        h1 {
+            font-size: 4rem;
+            animation: fadeIn 3s ease-in-out;
+        }
+
+        .button {
+            z-index: 1;
+            position: relative;
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            border: none;
+            background: white;
+            color: #ff7e5f;
+            cursor: pointer;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: transform 0.3s, background 0.3s;
+        }
+
+        .button:hover {
+            transform: scale(1.1);
+            background: #ff7e5f;
+            color: white;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .carousel {
+            position: relative;
+            width: 80%;
+            max-width: 600px;
+            margin: 30px auto;
+            overflow: hidden;
+            border-radius: 10px;
+        }
+        .carousel img {
+            width: 100%;
+            border-radius: 10px;
+            display: none;
+        }
+        .carousel img.active {
+            display: block;
+            animation: fade 1s ease-in-out;
+        }
+        @keyframes fade {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .floating {
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0% { transform: translatey(0); }
+            50% { transform: translatey(-10px); }
+            100% { transform: translatey(0); }
+        }
+        .stars {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: transparent url('https://cdn.pixabay.com/photo/2014/11/19/21/01/abstract-463906_960_720.png') repeat;
+            animation: twinkling 1.5s infinite;
+        }
+        @keyframes twinkling {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <video class="bg-video" autoplay loop muted>
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+        您的浏览器不支持视频标签。
+    </video>
+    <div class="stars"></div>
+    <div class="container">
+        <h1>爱在每一个瞬间</h1>
+        <a href="../index.html" class="button" >返回现实</a>
+        
+        <div class="carousel">
+            <img src="https://via.placeholder.com/600x400/ff7e5f/ffffff?text=浪漫1" class="active" alt="浪漫1">
+            <img src="https://via.placeholder.com/600x400/feb47b/ffffff?text=浪漫2" alt="浪漫2">
+            <img src="https://via.placeholder.com/600x400/ff7e5f/ffffff?text=浪漫3" alt="浪漫3">
+        </div>
+
+        <div class="floating" style="margin-top: 20px;">
+            <img src="https://via.placeholder.com/100x100/ffffff/ff7e5f?text=❤️" alt="心形" />
+        </div>
+    </div>
+
+    <script>
+        let currentIndex = 0;
+        const images = document.querySelectorAll('.carousel img');
+
+        function showNextImage() {
+            images[currentIndex].classList.remove('active');
+            currentIndex = (currentIndex + 1) % images.length;
+            images[currentIndex].classList.add('active');
+        }
+
+        setInterval(showNextImage, 3000); // 每3秒切换一次
+    </script>
+</body>
+</html>
