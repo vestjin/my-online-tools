@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级在线PDF工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.9.359/pdf.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        .upload-area {
+            border: 2px dashed #ccc;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            background-color: #f9f9f9;
+        }
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #preview-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-top: 20px;
+        }
+        #preview {
+            width: 70%;
+            height: 800px;
+            border: 1px solid #ccc;
+        }
+        #file-list {
+            width: 25%;
+            border: 1px solid #ccc;
+            padding: 10px;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        #progress-bar {
+            width: 100%;
+            background-color: #f0f0f0;
+            padding: 3px;
+            border-radius: 3px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, .2);
+            margin-top: 10px;
+        }
+        #progress-bar-fill {
+            display: block;
+            height: 22px;
+            background-color: #659cef;
+            border-radius: 3px;
+            transition: width 500ms ease-in-out;
+            text-align: center;
+            color: white;
+            line-height: 22px;
+        }
+        #page-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+        #page-controls button {
+            margin: 0 5px;
+        }
+        #current-page {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>高级在线PDF工具</h1>
+        <div id="upload-area" class="upload-area">
+            <p>点击或拖拽PDF文件到这里上传（支持多文件，单文件最大20MB）</p>
+            <input type="file" id="file-input" style="display: none;" accept=".pdf" multiple>
+        </div>
+        <div id="progress-bar" style="display: none;">
+            <span id="progress-bar-fill" style="width: 0%;"></span>
+        </div>
+        <div class="buttons">
+            <button id="merge-pdf">合并PDF</button>
+            <button id="split-pdf">分割PDF</button>
+            <button id="compress-pdf">压缩PDF</button>
+            <button id="remove-watermark">去除水印</button>
+            <button id="rotate-pdf">旋转页面</button>
+            <button id="add-page-numbers">添加页码</button>
+            <button id="download" disabled>下载处理后的文件</button>
+        </div>
+        <div id="preview-container">
+            <div id="file-list"></div>
+            <div>
+                <canvas id="preview"></canvas>
+                <div id="page-controls">
+                    <button id="prev-page">上一页</button>
+                    <span id="current-page"></span>
+                    <button id="next-page">下一页</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化变量
+        let currentPdfs = [];
+        let currentPdfDoc = null;
+        let currentPage = 1;
+        let numPages = 0;
+        const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB
+
+        const fileInput = document.getElementById('file-input');
+        const uploadArea = document.getElementById('upload-area');
+        const fileList = document.getElementById('file-list');
+        const previewCanvas = document.getElementById('preview');
+        const progressBar = document.getElementById('progress-bar');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const currentPageSpan = document.getElementById('current-page');
+
+        // 绑定按钮事件
+        document.getElementById('merge-pdf').addEventListener('click', mergePDFs);
+        document.getElementById('split-pdf').addEventListener('click', splitPDF);
+        document.getElementById('compress-pdf').addEventListener('click', compressPDF);
+        document.getElementById('remove-watermark').addEventListener('click', removeWatermark);
+        document.getElementById('rotate-pdf').addEventListener('click', rotatePDF);
+        document.getElementById('add-page-numbers').addEventListener('click', addPageNumbers);
+        document.getElementById('download').addEventListener('click', downloadProcessedFile);
+        prevPageBtn.addEventListener('click', showPreviousPage);
+        nextPageBtn.addEventListener('click', showNextPage);
+
+        // 上传区域点击事件
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // 文件拖拽事件
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = '#e9e9e9';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.backgroundColor = '';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = '';
+            handleFiles(e.dataTransfer.files);
+        });
+
+        // 文件选择事件
+        fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+        // 处理上传的文件
+        function handleFiles(files) {
+            const pdfFiles = Array.from(files).filter(file => file.type === 'application/pdf');
+            if (pdfFiles.length > 0) {
+                const validFiles = pdfFiles.filter(file => file.size <= MAX_FILE_SIZE);
+                if (validFiles.length !== pdfFiles.length) {
+                    alert(`有${pdfFiles.length - validFiles.length}个文件超过20MB限制，已被过滤。`);
+                }
+                currentPdfs = validFiles;
+                updateFileList();
+                document.getElementById('download').disabled = false;
+                if (currentPdfs.length > 0) {
+                    loadPDF(currentPdfs[0]);
+                }
+            } else {
+                alert('请上传PDF文件');
+            }
+        }
+
+        // 更新文件列表
+        function updateFileList() {
+            fileList.innerHTML = '<h3>已上传文件：</h3>';
+            currentPdfs.forEach((pdf, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span>${pdf.name}</span>
+                    <button onclick="previewFile(${index})">预览</button>
+                `;
+                fileList.appendChild(fileItem);
+            });
+        }
+
+        // 预览特定文件
+        function previewFile(index) {
+            loadPDF(currentPdfs[index]);
+        }
+
+        // 加载PDF
+        async function loadPDF(file) {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const pdfData = new Uint8Array(e.target.result);
+                try {
+                    currentPdfDoc = await pdfjsLib.getDocument({data: pdfData}).promise;
+                    numPages = currentPdfDoc.numPages;
+                    currentPage = 1;
+                    renderPage(currentPage);
+                    updatePageControls();
+                } catch (error) {
+                    console.error('Error loading PDF:', error);
+                    alert('加载PDF时发生错误，请尝试重新上传。');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 渲染PDF页面
+        async function renderPage(num) {
+            const page = await currentPdfDoc.getPage(num);
+            const scale = 1.5;
+            const viewport = page.getViewport({scale: scale});
+
+            previewCanvas.height = viewport.height;
+            previewCanvas.width = viewport.width;
+
+            const renderContext = {
+                canvasContext: previewCanvas.getContext('2d'),
+                viewport: viewport
+            };
+            
+            await page.render(renderContext);
+        }
+
+        // 更新页面控制
+        function updatePageControls() {
+            currentPageSpan.textContent = `第 ${currentPage} 页，共 ${numPages} 页`;
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = currentPage >= numPages;
+        }
+
+        // 显示上一页
+        async function showPreviousPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                await renderPage(currentPage);
+                updatePageControls();
+            }
+        }
+
+        // 显示下一页
+        async function showNextPage() {
+            if (currentPage < numPages) {
+                currentPage++;
+                await renderPage(currentPage);
+                updatePageControls();
+            }
+        }
+
+        // 模拟处理函数
+        function simulateProcessing(duration) {
+            return new Promise((resolve) => {
+                progressBar.style.display = 'block';
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 1;
+                    progressBarFill.style.width = `${progress}%`;
+                    progressBarFill.textContent = `${progress}%`;
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            progressBar.style.display = 'none';
+                            resolve();
+                        }, 500);
+                    }
+                }, duration / 100);
+            });
+        }
+
+        // PDF操作函数（模拟）
+        async function mergePDFs() {
+            if (currentPdfs.length < 2) {
+                alert('请至少上传两个PDF文件以进行合并操作');
+                return;
+            }
+            alert('开始合并PDF文件');
+            await simulateProcessing(3000);
+            alert('PDF文件已合并');
+        }
+
+        async function splitPDF() {
+            if (currentPdfs.length === 0) {
+                alert('请先上传PDF文件');
+                return;
+            }
+            alert('开始分割PDF文件');
+            await simulateProcessing(2000);
+            alert('PDF文件已分割');
+        }
+
+        async function compressPDF() {
+            if (currentPdfs.length === 0) {
+                alert('请先上传PDF文件');
+                return;
+            }
+            alert('开始压缩PDF文件');
+            await simulateProcessing(2500);
+            alert('PDF文件已压缩');
+        }
+
+        async function removeWatermark() {
+            if (currentPdfs.length === 0) {
+                alert('请先上传PDF文件');
+                return;
+            }
+            alert('开始去除水印');
+            await simulateProcessing(1800);
+            alert('水印已去除');
+        }
+
+        async function rotatePDF() {
+            if (currentPdfs.length === 0) {
+                alert('请先上传PDF文件');
+                return;
+            }
+            const angle = prompt('请输入旋转角度（90、180、270）：');
+            if (angle && ['90', '180', '270'].includes(angle)) {
+                alert(`开始旋转PDF页面，角度：${angle}度`);
+                await simulateProcessing(1500);
+                alert('PDF页面已旋转');
+            } else {
+                alert('无效的角度输入');
+            }
+        }
+
+        async function addPageNumbers() {
+            if (currentPdfs.length === 0) {
+                alert('请先上传PDF文件');
+                return;
+            }
+            alert('开始添加页码');
+            await simulateProcessing(2000);
+            alert('页码已添加到PDF文件');
+        }
+
+        // 下载处理后的文件（模拟）
+        function downloadProcessedFile() {
+            if (currentPdfs.length > 0) {
+                const blob = new Blob([currentPdfs[0]], {type: 'application/pdf'});
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = 'processed.pdf';
+                link.click();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级在线图片处理工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/compressorjs/1.2.1/compressor.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/camanjs/4.1.2/caman.full.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; }
+        h1 { text-align: center; }
+        #imageInput { display: none; }
+        #canvas, #cropperImage { max-width: 100%; display: none; }
+        .controls { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; }
+        button { margin: 5px; padding: 10px 15px; cursor: pointer; }
+        .slider { width: 100%; margin: 10px 0; }
+        #watermarkText { width: 100%; margin: 10px 0; }
+        #preview { max-width: 100%; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>高级在线图片处理工具</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="document.getElementById('imageInput').click()">选择图片</button>
+    <canvas id="canvas"></canvas>
+    <img id="cropperImage" src="">
+    <div class="controls">
+        <button onclick="compressImage()">压缩图片</button>
+        <button onclick="convertFormat()">格式转换</button>
+        <button onclick="addWatermark()">添加水印</button>
+        <button onclick="resizeImage()">调整大小</button>
+        <button onclick="cropImage()">裁剪图片</button>
+        <button onclick="enhanceImage()">提升质量</button>
+        <button onclick="removeBackground()">抠图</button>
+        <button onclick="downloadImage()">下载图片</button>
+    </div>
+    <div id="adjustments" style="display:none;">
+        <input type="range" id="brightnessSlider" min="-100" max="100" value="0" class="slider">
+        <label for="brightnessSlider">亮度</label>
+        <input type="range" id="contrastSlider" min="-100" max="100" value="0" class="slider">
+        <label for="contrastSlider">对比度</label>
+        <input type="range" id="saturationSlider" min="-100" max="100" value="0" class="slider">
+        <label for="saturationSlider">饱和度</label>
+        <button onclick="applyAdjustments()">应用调整</button>
+    </div>
+    <input type="text" id="watermarkText" placeholder="输入水印文字" style="display:none;">
+    <img id="preview" src="">
+
+    <script>
+        let canvas = new fabric.Canvas('canvas');
+        let originalImage;
+        let cropper;
+
+        document.getElementById('imageInput').addEventListener('change', function(e) {
+            let file = e.target.files[0];
+            let reader = new FileReader();
+            reader.onload = function(f) {
+                let data = f.target.result;
+                fabric.Image.fromURL(data, function(img) {
+                    canvas.clear();
+                    canvas.setDimensions({width: img.width, height: img.height});
+                    canvas.setBackgroundImage(img, canvas.renderAll.bind(canvas));
+                    originalImage = img;
+                    document.getElementById('canvas').style.display = 'block';
+                    document.getElementById('cropperImage').style.display = 'none';
+                    document.getElementById('preview').style.display = 'none';
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function compressImage() {
+            let dataUrl = canvas.toDataURL({format: 'jpeg', quality: 0.8});
+            new Compressor(dataURLtoFile(dataUrl, 'compressed.jpg'), {
+                quality: 0.6,
+                success(result) {
+                    let url = URL.createObjectURL(result);
+                    updatePreview(url);
+                },
+                error(err) {
+                    console.log(err.message);
+                },
+            });
+        }
+
+        function convertFormat() {
+            let format = prompt("请输入目标格式 (jpeg, png, webp):", "png");
+            if (['jpeg', 'png', 'webp'].includes(format)) {
+                let dataUrl = canvas.toDataURL({format: format});
+                updatePreview(dataUrl);
+            } else {
+                alert("不支持的格式");
+            }
+        }
+
+        function addWatermark() {
+            document.getElementById('watermarkText').style.display = 'block';
+            document.getElementById('watermarkText').onchange = function() {
+                let text = new fabric.Text(this.value, {
+                    left: 10,
+                    top: 10,
+                    fontSize: 30,
+                    fill: 'rgba(255,255,255,0.5)'
+                });
+                canvas.add(text);
+                canvas.renderAll();
+            };
+        }
+
+        function resizeImage() {
+            let width = prompt("请输入新的宽度:", canvas.getWidth());
+            let height = prompt("请输入新的高度:", canvas.getHeight());
+            canvas.setDimensions({width: parseInt(width), height: parseInt(height)});
+            canvas.renderAll();
+        }
+
+        function cropImage() {
+            document.getElementById('canvas').style.display = 'none';
+            document.getElementById('cropperImage').style.display = 'block';
+            document.getElementById('cropperImage').src = canvas.toDataURL();
+            cropper = new Cropper(document.getElementById('cropperImage'), {
+                aspectRatio: NaN,
+                viewMode: 1,
+                ready: function() {
+                    document.querySelector('.controls').innerHTML += '<button onclick="applyCrop()">应用裁剪</button>';
+                }
+            });
+        }
+
+        function applyCrop() {
+            let croppedCanvas = cropper.getCroppedCanvas();
+            updatePreview(croppedCanvas.toDataURL());
+            cropper.destroy();
+            document.getElementById('cropperImage').style.display = 'none';
+            document.getElementById('canvas').style.display = 'block';
+        }
+
+        function enhanceImage() {
+            document.getElementById('adjustments').style.display = 'block';
+        }
+
+        function applyAdjustments() {
+            let brightness = document.getElementById('brightnessSlider').value;
+            let contrast = document.getElementById('contrastSlider').value;
+            let saturation = document.getElementById('saturationSlider').value;
+            
+            Caman('#preview', function () {
+                this.revert(false);
+                this.brightness(parseInt(brightness));
+                this.contrast(parseInt(contrast));
+                this.saturation(parseInt(saturation));
+                this.render();
+            });
+        }
+
+        function removeBackground() {
+            alert("抱歉，完全自动的背景移除需要复杂的机器学习模型。这里我们可以提供一个简单的基于颜色的背景移除。请在实际项目中考虑使用专业的API或库。");
+            
+            let threshold = parseInt(prompt("请输入颜色阈值 (0-255):", "50"));
+            let imageData = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height);
+            let data = imageData.data;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                if (data[i] > 255 - threshold && data[i + 1] > 255 - threshold && data[i + 2] > 255 - threshold) {
+                    data[i + 3] = 0; // 设置 alpha 为 0
+                }
+            }
+            
+            canvas.getContext('2d').putImageData(imageData, 0, 0);
+            canvas.renderAll();
+        }
+
+        function downloadImage() {
+            let link = document.createElement('a');
+            link.download = 'processed_image.png';
+            link.href = document.getElementById('preview').src || canvas.toDataURL();
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function updatePreview(src) {
+            document.getElementById('preview').src = src;
+            document.getElementById('preview').style.display = 'block';
+        }
+
+        function dataURLtoFile(dataurl, filename) {
+            let arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while(n--){
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new File([u8arr], filename, {type:mime});
+        }
+    </script>
+</body>
+</html>
