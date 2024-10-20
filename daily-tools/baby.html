@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>胎儿发育过程 (1-40周)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --background-color: #ecf0f1;
+            --text-color: #34495e;
+            --card-background: #ffffff;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background-color: var(--card-background);
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        .card:hover, .card:focus {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-image {
+            width: 100%;
+            height: 396px;
+            object-fit: cover;
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        .card h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--primary-color);
+        }
+
+        .card p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: var(--card-background);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transform: scale(0.7);
+            transition: transform 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+        }
+
+        .modal.show .modal-content {
+            transform: scale(1);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .close:hover, .close:focus {
+            color: var(--text-color);
+        }
+
+        #modalContent {
+            margin-top: 1rem;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        #modalContent p {
+            margin-bottom: 1em;
+        }
+
+        #modalContent strong {
+            color: var(--primary-color);
+        }
+
+        #modalContent em {
+            background-color: rgba(52, 152, 219, 0.1);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        #modalContent ul, #modalContent ol {
+            padding-left: 2em;
+            margin-bottom: 1em;
+        }
+
+        #modalContent li {
+            margin-bottom: 0.5em;
+        }
+
+        .timeline {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        .timeline-progress {
+            height: 100%;
+            background-color: var(--secondary-color);
+            width: 0;
+            transition: width 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>胎儿发育过程 (1-40周)</h1>
+    </header>
+
+    <main class="container" id="cardContainer"></main>
+
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <div class="timeline">
+        <div class="timeline-progress" id="timelineProgress"></div>
+    </div>
+
+    <script>
+        const weeklyData = [
+            { week: 1, summary: "怀孕1周注意事项:怀孕期一般都以准妈妈末次月经的第一天为起始时间，这时的你，还处于月经期。 如果你已决定怀孕，放松心情吧，以最平和的心态去面对，要知道，每一个宝宝的到来都是他与父母妙不可言的缘分，都是不可替代的人间天使。", details: "../text/baby/week1.txt", image: "../pic/baby/week1.jpg" },
+            { week: 2, summary: "怀孕2周注意事项: 从这周起，你的排卵期就会开始，在月经前第13-20天时是你的最佳怀孕期，你可以与丈夫共同调整身体健康状态，在最佳时间完成你们的使命。", details: "../text/baby/week2.txt", image: "../pic/baby/week2.jpg" },
+            { week: 3, summary: "怀孕3周注意事项: 在这周，你已经进入排卵期这周你最有可能受孕，一旦排卵和受精发生，你就能确定怀孕了。从现在开始，你的生命中就会增加一份责任，你的肚子里有了一个小生命，你要和他40周朝夕相伴的时光了。", details: "../text/baby/week3.txt", image: "../pic/baby/week3.jpg" },
+            { week: 4, summary: "怀孕4周注意事项: 这个时候，生命的种子已经开始在妈妈体内生根发芽，准妈妈开始了孕育生命的路程。10月怀胎的过程，有辛苦有忐忑，但更多的是奇妙与甜蜜。对新生命的期盼，对未来生活的期许，幸福的憧憬将伴您度过整个孕期。", details: "../text/baby/week4.txt", image: "../pic/baby/week4.jpg" },
+            { week: 5, summary: "怀孕5周注意事项:“老朋友”没来报道，这时候再粗心的你，可能都会怀疑自己怀孕了。到医院做检查确定怀孕以后，你的心情是欣喜，还是紧张?从现在开始，你就要特别关心自己的日常起居、饮食营养等问题", details: "../text/baby/week5.txt", image: "../pic/baby/week5.jpg" },
+            { week: 6, summary: "怀孕6周注意事项: 进入第6周后，在你的子宫里，胚胎正在迅速地成长，现在他的长度约0.6cm，像一颗小蓝莓。你的妊娠反应也开始明显起来。现在最好不要外出旅行，因为过度劳累有可能引起流产", details: "../text/baby/week6.txt", image: "../pic/baby/week6.jpg" },
+            { week: 7, summary: "怀孕7周注意事项: 怀孕进入第7周了，这时的肠胎像一颗芸豆，约1cm长。这个时候胎宝宝大脑的形成速度是非常快的，平均每分钟有10000个神经细胞产生。由于早孕反应，你的情绪波动会很大。这个时候仍然需要继续补充叶酸和其他微量元素食物。", details: "../text/baby/week7.txt", image: "../pic/baby/week7.jpg" },
+            { week: 8, summary: "怀孕8周注意事项: 进入怀孕8周，你会明显感受到自己要当妈妈了，胚胎的器官特征开始明显，各个不同的器官开始忙碌地发育。你千万别随便吃药，以免宝宝的生殖器官发生畸变。", details: "../text/baby/week8.txt", image: "../pic/baby/week8.jpg" },
+            { week: 9, summary: "怀孕9周注意事项: 进入怀孕第9周，从这个月开始，胚胎正式可以叫做“胎儿”了，他现在大约有2cm长。你的子宫也已经有拳头大，压迫膀胱会造成尿频这时的你可能会跑洗手间小便", details: "../text/baby/week9.txt", image: "../pic/baby/week9.jpg" },
+            { week: 10, summary: "怀孕10周注意事项: 进入怀孕第10周，到本周末，胎宝宝的身长会达到4cm，就像2颗红枣。现在你的情绪波动会很大，不要为这种变幻莫测的情绪感到不安，这是由于孕期雌激素影响所造成的正常现象。", details: "../text/baby/week10.txt", image: "../pic/baby/week10.jpg" },
+            { week: 11, summary: "怀孕11周注意事项: 这周你的孕期反应没那么强烈了，小宝宝已经在你的子宫内开始做吸吮、吞咽和踢腿的动作，手指甲和头发也已经出现，这是宝宝骨骼形成、发育最旺盛的时期。在这个阶段，你要注意孕期补钙，用最舒适的心情等待宝宝苗壮成长吧!", details: "../text/baby/week11.txt", image: "../pic/baby/week11.jpg" },
+            { week: 12, summary: "怀孕12周注意事项: 本周宝宝已经初具人形，手指和脚趾完全分开，他正在你的子宫里踢腿、舒展身体，他还学会了打哈欠呢。你可能有了妊娠纹和妊娠斑，不要担心，这些会随着分娩的结束而消失。要进行第一次产检和建档了，为宝宝的生长保驾护航吧!", details: "../text/baby/week12.txt", image: "../pic/baby/week12.jpg" },
+            { week: 13, summary: "怀孕13周注意事项:宝宝已经像一个成型的小大人了，眼睛突出在头的额部，两眼之间在缩小，耳朵也已就位，嘴唇也可以张合了。你已度过较危险的孕早期，晋升为准妈妈，不要吃生冷食物，避免孕期腹泻在这周穿上孕妇装，向大家展示母亲的魅力吧!", details: "../text/baby/week13.txt", image: "../pic/baby/week13.jpg" },
+            { week: 14, summary: "怀孕14周注意事项: 这周的宝宝生长迅速，小牙已经在牙床上形成，手指还出现了指纹，他的运动开始变得协调，会做皱眉、做鬼脸，你可能在遭遇孕期便秘的痛苦，多吃水果和蔬菜，做家务事时要注意活动姿势，要知道，你现在可是两个人了哦!", details: "../text/baby/week14.txt", image: "../pic/baby/week14.jpg" },
+            { week: 15, summary: "怀孕15周注意事项: 这周宝宝开始在你的子宫里做各种动作，他会紧握拳头、眯眼睛、皱眉头，最特别的是他会打嗝了，这是宝宝开始呼吸的前兆。为了母子的健康，这周你要进行唐氏筛查以及确定母婴血型是否不合，这是关键的检查，一定要重视哦!", details: "../text/baby/week15.txt", image: "../pic/baby/week15.jpg" },
+            { week: 16, summary: "怀孕16周注意事项: 这周宝宝特别快乐，他能够做出各种各样的动作，喂拇指、伸脚、眯眼、甚至会翻跟头，而且令人激动的是，你可以听到第一次胎动了，这会让你直观感受到宝宝的存在。宝宝发育迅速，你很容易贫血，补充好营养，和宝宝一起成长吧!", details: "../text/baby/week16.txt", image: "../pic/baby/week16.jpg" },
+            { week: 17, summary: "怀孕17周注意事项: 这周的宝宝特别顽皮，喜欢用手抓住脐带玩耍，他的循环系统、尿道也已开始工作，他可以不断的呼出和吸入羊水。这时的宝宝进入发育关键期，你要注意产检，通过B超检查来确定宝宝是否正常。", details: "../text/baby/week17.txt", image: "../pic/baby/week17.jpg" },
+            { week: 18, summary: "怀孕18周注意事项: 现在的宝宝骨骼全部是类似橡胶似的软骨，以后会变得越来越硬，他的耳骨也完全形成了。而你正在平稳的度过着孕中期，身体开始笨拙，该放弃高跟鞋了。这周你可以清晰听到宝宝的心音了，快学习一下怎么听胎心吧!", details: "../text/baby/week18.txt", image: "../pic/baby/week18.jpg" },
+            { week: 19, summary: "怀孕19周注意事项:首先恭喜你度过了流产的高发期，现在宝宝发育畸形的危险已经大大降低。你可以舒一口气了。现在宝宝的感觉器官已经按照区域迅速发展，味觉、触觉、视觉等神经细胞正在分化。你要做到的是补充维生素，以保证胎儿的营养，坚持数胎动，每天感受到胎宝宝的变化，小心呵护他吧!", details: "../text/baby/week19.txt", image: "../pic/baby/week19.jpg" },
+            { week: 20, summary: "怀孕20周注意事项:现在的宝宝四肢已经发育好，他开始吞咽羊水，而且已经会尿尿了哦!他的运动将非常频繁，会经常翻滚，让你晚上睡不着。现在的你该进行一次产检，宫高是宝宝生长的重要数据，务必要记录好:要注意量血压，警惕妊娠高血压发生。", details: "../text/baby/week20.txt", image: "../pic/baby/week20.jpg" },
+            { week: 21, summary: "怀孕21周注意事项:此时的宝宝非常爱动，平均一个小时就要动50次呢!现在的他已经是个有感觉有意识的小孩了，外界的声音他都可以听到了，听到喜欢的音乐，他会跳起舞来哦!这段时间你不要被“假宫缩”吓下到了，没有疼痛的宫缩是正常现象。注意饮食和休息，补铁补钙是关键。", details: "../text/baby/week21.txt", image: "../pic/baby/week21.jpg" },
+            { week: 22, summary: "怀孕22周注意事项: 在的小宝宝眉毛和眼脸已经清晰可见了，手指也长出了娇嫩的小指甲，现在看起来已经是正儿八经的“小人儿”，只不过他的皮肤还红红的，像个皱巴巴的小老头。小宝宝带给你身体的变化不少，也许你已经被牙龈出血和皮肤癌痒所困扰，这都是拜他所赐哦。", details: "../text/baby/week22.txt", image: "../pic/baby/week22.jpg" },
+            { week: 23, summary: "怀孕23周注意事项: 这周的宝宝已经像个真正的婴儿了!他的骨骼肌肉已经长成，嘴唇眉毛也各就各位了。产检时你可以听到他强有力的心跳了呢! 你要注意控制体重，现在是妊娠中毒症的高发期，要定时产检,以保障自己和宝宝的安全。", details: "../text/baby/week23.txt", image: "../pic/baby/week23.jpg" },
+            { week: 24, summary: "怀孕24周注意事项: 宝宝在你的肚子里越来越大，已经充满了你的子宫，此刻正不停地踢腿，打嗝做运动。他的听力已经非常健全，吸尘器、电钻声都会让他烦躁，要注意避免哦。本周你要进行妊娠糖尿病筛检，这是很重要的检查，千万不要掉以轻心。", details: "../text/baby/week24.txt", image: "../pic/baby/week24.jpg" },
+            { week: 25, summary: "怀孕25周注意事项:在本周，宝宝第一次睁开了双眼，不过子宫里太黑了，他什么都看不到，但你可以通过光照胎教来锻炼他的视觉神经。这周开始，你可以着手准备待产包了，奶瓶、奶粉、纸尿裤一样都不能少，在这过程中充分感受做母亲的喜悦吧!", details: "../text/baby/week25.txt", image: "../pic/baby/week25.jpg" },
+            { week: 26, summary: "怀孕26周注意事项: 现在的宝宝力气很大，你随时都要遭受他的“拳打脚踢”，他现在对声音越来越敏感，外界的声音会通过你的子宫传进他的耳朵。你会感到很幸福吧!同时你腰酸背痛的情况会加重，这都是拜他所赐，忍受一下这甜蜜的负担吧!", details: "../text/baby/week26.txt", image: "../pic/baby/week26.jpg" },
+            { week: 27, summary: "怀孕27周注意事项:一转眼你已经怀孕27周啦!现在的宝宝正在茁壮成长，他的眼睛一会睁开一会闭上，睡觉很规律呢!你可以感受到他频繁的胎动，对你“拳打脚踢”的，这段时间你要持续的补钙补铁，为宝宝提供充分的营养哦!", details: "../text/baby/week27.txt", image: "../pic/baby/week27.jpg" },
+            { week: 28, summary: "怀孕28周注意事项:胎宝宝从这周开始就会做梦啦!可是梦到什么我们也没法知道呀!现在小家伙大脑活动非常活跃，所以你要及时补充亚麻酸和亚油酸促进他的大脑发育。现在你要勤快一点，每两周就要去产检一次。为了胎宝宝的健康，多麻烦也值得，对吧?", details: "../text/baby/week28.txt", image: "../pic/baby/week28.jpg" },
+            { week: 29, summary: "怀孕29周注意事项: 胎宝宝越长越大，他在子宫里的活动空间变小，他的胎动逐渐减弱，不过依然好动，总是踢个不停，让你睡不好觉。你在这时要警惕早产的发生，身体有异样要及时去医院。如果你发现胎位不正也不用太担心，医生会让你们母子平安的。", details: "../text/baby/week29.txt", image: "../pic/baby/week29.jpg" },
+            { week: 30, summary: "怀孕30周注意事项:胎宝宝的大脑正在快速发育，神经系统已经很发达了，他的皮下脂肪也在持续增长，所以现在的他看起来胖多了。他现在需要的营养达到高峰，你要吃好睡好保证他的生长。孕晚期的产检尤为重要，你可不要嫌去医院麻烦哦!", details: "../text/baby/week30.txt", image: "../pic/baby/week30.jpg" },
+            { week: 31, summary: "怀孕31周注意事项: 进入孕31周时，胎宝宝的肺部和消化系统已基本完成了，眼睛还会时开时闭，能够辨别明暗了，而且这周胎动也会有所减少。但这周你会感到呼吸越发困难，不要担心，这只是子宫底上升到横隔膜了，度过这4周等胎儿头位下降后，你就可以畅快呼吸了。", details: "../text/baby/week31.txt", image: "../pic/baby/week31.jpg" },
+            { week: 32, summary: "怀孕32周注意事项: 这一周，你可能会感到很疲惫，休息不好，行动也很不方便，食欲也因为胃部不适而有所下降，阴道分泌物增多，排尿的次数也增多了。这一周胎宝宝的头位也开始下降了，他也和你一起为分娩努力呢，所以你要加油哦。", details: "../text/baby/week32.txt", image: "../pic/baby/week32.jpg" },
+            { week: 33, summary: "怀孕33周注意事项: 这一周大多数胎宝宝都是头位了，这是为出生做准备。而且，这一周你会感到骨盆和耻骨交接处有些酸痛，手指和脚趾的关节胀痛，韧带松弛，虽然有些难受，但是想想宝宝的出世，你还是会觉得这一切都是值得的。", details: "../text/baby/week33.txt", image: "../pic/baby/week33.jpg" },
+            { week: 34, summary: "怀孕34周注意事项: 怀孕进入34周，离预产期又更近一周了，这一周胎宝宝的各项发育都渐渐趋向成熟，你不用再担心早产的问题了，抱着愉快的心情慢慢等待宝宝的出世吧。", details: "../text/baby/week34.txt", image: "../pic/baby/week34.jpg" },
+            { week: 35, summary: "怀孕35周注意事项:到了孕35周，距离预产期还有一个月了，胎宝宝这时候已经发育完全，他就像出生时的那个样子了。临近分娩，或许现在的你有些紧张，记得要放松心情，和家人多沟通，一切都会很顺利的", details: "../text/baby/week35.txt", image: "../pic/baby/week35.jpg" },
+            { week: 36, summary: "怀孕35周注意事项:到了孕35周，距离预产期还有一个月了，胎宝宝这时候已经发育完全，他就像出生时的那个样子了。临近分娩，或许现在的你有些紧张，记得要放松心情，和家人多沟通，一切都会很顺利的", details: "../text/baby/week36.txt", image: "../pic/baby/week36.jpg" },
+            { week: 37, summary: "怀孕37周注意事项: 恭喜你，这一周开始，你的胎宝宝就称之为足月儿啦，这就意味着宝宝随时都可能出生，你很快就要和宝宝见面了，你要做好充足的分娩准备哦。", details: "../text/baby/week37.txt", image: "../pic/baby/week37.jpg" },
+            { week: 38, summary: "怀孕38周注意事项: 到了这一周，胎宝宝已经完全发育好了，他已经可以在你的肚子以外生存啦，他随时都可能会出来，你要做好准备，密切关注临盆征兆的出现。", details: "../text/baby/week38.txt", image: "../pic/baby/week38.jpg" },
+            { week: 39, summary: "怀孕39周注意事项: 孕39周了，宝宝随时都要出来和你见面了，你是否又期待又焦虑?该准备的都准备好了吗?和宝宝如此亲密接近的日子没几天了，要好好珍惜哦。", details: "../text/baby/week39.txt", image: "../pic/baby/week39.jpg" },
+            { week: 40, summary: "怀孕40周注意事项: 也许就在这一周，你就可以看到你的小宝宝了，你要准备好待产包，随时准备入院迎接小宝宝降生。如果过了预产期，肚子还没有动静，那就要及时去医院检查，防止过期妊娠。每天多散步，多喝水，少吃多餐，准备好体力来分娩吧。", details: "../text/baby/week40.txt", image: "../pic/baby/week40.jpg" },    
+  
+            // ... 添加更多周的数据 ...
+        ];
+
+        function createCards() {
+            const container = document.getElementById('cardContainer');
+            weeklyData.forEach(data => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `
+                    <img class="card-image" src="${data.image}" alt="第${data.week}周胎儿发育图">
+                    <div class="card-content">
+                        <h3>第${data.week}周</h3>
+                        <p>${data.summary}</p>
+                    </div>
+                `;
+                card.onclick = () => showDetails(data.week);
+                container.appendChild(card);
+            });
+        }
+
+        async function showDetails(week) {
+            const data = weeklyData.find(item => item.week === week);
+            document.getElementById('modalTitle').textContent = `第${week}周详情`;
+            
+            try {
+                const response = await fetch(data.details);
+                const text = await response.text();
+                document.getElementById('modalContent').innerHTML = formatContent(text);
+            } catch (error) {
+                console.error('Error loading details:', error);
+                document.getElementById('modalContent').textContent = '无法加载详细信息';
+            }
+            
+            const modal = document.getElementById('detailModal');
+            modal.style.display = 'block';
+            setTimeout(() => modal.classList.add('show'), 10);
+            updateTimeline(week);
+        }
+
+        function formatContent(text) {
+            // 保持原始格式，但添加一些简单的HTML标记以改善可读性
+            return text 
+                .replace(/\n\n/g, '</p><p>')  //将连续的两个换行符替换为段落标签
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') //将**文本**格式转换为粗体
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')  //将*文本*格式转换为斜体
+                .replace(/^- /gm, '• ')               //将以破折号开头的行转换为无序列表项
+                .replace(/^(\d+\、)/gm, '<br>$1')    //为数字列表项添加换行
+                .replace(/^([^•\d].*)：$/gm, '<strong>$1:</strong>') //将以冒号结尾的行转换为粗体（通常用于小标题）
+                .trim();
+        }
+
+        function updateTimeline(week) {
+            const progress = (week / 40) * 100;
+            document.getElementById('timelineProgress').style.width = `${progress}%`;
+        }
+
+        document.querySelector('.close').onclick = function() {
+            const modal = document.getElementById('detailModal');
+            modal.classList.remove('show');
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('detailModal');
+            if (event.target == modal) {
+                modal.classList.remove('show');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
+        }
+
+        createCards();
+    </script>
+</body>
+</html>
